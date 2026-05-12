@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Digitalisering av skråfoto – Nasjonalbiblioteket</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Playfair+Display:wght@400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #f4f4f4;   /* surface/base */
+      --surface:     #ffffff;   /* surface/elevated */
+      --border:      #d4d4d4;   /* neutral-tints/100 */
+      --border2:     #d9d9d9;
+      --text:        #17181b;   /* text/default + primary/default */
+      --muted:       #5b5c62;   /* text/muted */
+      --placeholder: #e4dfde;   /* surface/highlighted */
+      --accent:      #fdbeca;   /* secondary/200 */
+      --active:      #550029;   /* primary/active — hover & selected states */
+      --nav-h:       113px;
+      --sidebar-w:   252px;
+      --r-sm:        4px;
+      --r:           8px;
+      --r-lg:        12px;
+      --font-sans:   'Inter', system-ui, -apple-system, sans-serif;
+      --font-serif:  'Playfair Display', Georgia, serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-weight: 300;
+      min-height: 100vh;
+      font-size: 15px;
+      line-height: 1.5;
+    }
+
+    /* ── TOP NAV ── */
+    .nav {
+      position: sticky; top: 0; z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      padding: 0 2rem;
+      gap: 2rem;
+    }
+    .nav-logo {
+      font-family: var(--font-sans);
+      font-size: .75rem; font-weight: 600;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0;
+    }
+    .nav-divider { width: 1px; height: 1.2rem; background: var(--border); flex-shrink: 0; }
+    .nav-title   { font-family: var(--font-serif); font-size: 1.05rem; font-weight: 400; color: var(--muted); white-space: nowrap; }
+    .nav-spacer  { flex: 1; }
+    .nav-lang {
+      font-size: .8rem; color: var(--muted);
+      border: 1px solid var(--border); padding: .25rem .6rem; border-radius: var(--r);
+      cursor: pointer; background: none; transition: border-color .15s;
+    }
+    .nav-lang:hover { border-color: var(--text); color: var(--text); }
+
+    /* ── SEARCH BAND ── */
+    .search-band {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 1.25rem 2rem;
+    }
+    .search-inner { max-width: 860px; display: flex; }
+    .search-inner input {
+      flex: 1; padding: .68rem 1rem;
+      border: 1.5px solid var(--text); border-right: none;
+      border-radius: var(--r) 0 0 var(--r);
+      background: var(--surface); color: var(--text);
+      font-size: .95rem; font-family: inherit; outline: none;
+    }
+    .search-inner input::placeholder { color: var(--muted); }
+    .search-inner button {
+      padding: .68rem 1.4rem;
+      border: 1.5px solid var(--text); border-radius: 0 var(--r) var(--r) 0;
+      background: var(--text); color: #fff;
+      font-size: .95rem; font-weight: 600; font-family: inherit;
+      cursor: pointer; white-space: nowrap; transition: background .2s, border-color .2s;
+    }
+    .search-inner button:hover { background: var(--active); border-color: var(--active); }
+
+    /* ── TOOLBAR ── */
+    .toolbar {
+      border-bottom: 1px solid var(--border2);
+      background: var(--surface);
+      padding: .7rem 2rem;
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    }
+    .toolbar-info { font-size: .83rem; color: var(--muted); flex: 1; min-width: 100px; }
+    .toolbar-controls { display: flex; align-items: center; gap: .6rem; flex-wrap: wrap; }
+    .toolbar-label { font-size: .8rem; color: var(--muted); white-space: nowrap; }
+    .toolbar-sep { width: 1px; height: 1rem; background: var(--border); }
+
+    .year-pills { display: flex; gap: .25rem; flex-wrap: wrap; }
+    .year-pill {
+      padding: .22rem .6rem; border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: transparent; color: var(--muted);
+      font-size: .78rem; font-family: inherit; cursor: pointer; transition: all .15s;
+    }
+    .year-pill:hover { border-color: var(--text); color: var(--text); }
+    .year-pill.active { background: var(--active); border-color: var(--active); color: #fff; font-weight: 600; }
+
+    .sort-select {
+      padding: .24rem .6rem; border-radius: var(--r);
+      border: 1px solid var(--border);
+      background: var(--surface); color: var(--text);
+      font-size: .78rem; font-family: inherit; cursor: pointer; outline: none; transition: border-color .15s;
+    }
+    .sort-select:hover, .sort-select:focus { border-color: var(--text); }
+
+    /* ── CONTENT LAYOUT ── */
+    .content-row {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      align-items: start;
+      min-height: calc(100vh - var(--nav-h) - 160px);
+    }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: sticky;
+      top: var(--nav-h);
+      height: calc(100vh - var(--nav-h));
+      overflow-y: auto;
+      border-right: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.25rem 0;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: var(--r-sm); }
+
+    .sb-section-title {
+      font-family: var(--font-sans);
+      font-size: .68rem; font-weight: 600;
+      letter-spacing: .12em; text-transform: uppercase;
+      color: var(--muted); padding: 0 1.1rem .6rem;
+    }
+
+    .sb-clear {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .8rem; color: var(--muted);
+      padding: .3rem 1.1rem .8rem;
+      cursor: pointer; border: none; background: none;
+      font-family: inherit; text-decoration: underline;
+      transition: color .15s;
+    }
+    .sb-clear:hover { color: var(--text); }
+    .sb-clear-line {
+      height: 1px; background: var(--border2); margin: 0 1.1rem .75rem;
+    }
+
+    /* County row */
+    .county-row {
+      display: flex; align-items: center;
+      padding: .35rem 1.1rem;
+      cursor: pointer; gap: .5rem;
+      transition: background .12s;
+    }
+    .county-row:hover { background: var(--bg); }
+    .county-row.active { background: var(--active); color: #fff; }
+    .county-row.active .county-name,
+    .county-row.active .county-count { color: #fff; }
+    .county-arrow {
+      font-size: .6rem; color: var(--muted);
+      transition: transform .15s; flex-shrink: 0;
+      line-height: 1; margin-top: .05rem;
+    }
+    .county-row.open .county-arrow { transform: rotate(90deg); }
+    .county-row.active .county-arrow { color: rgba(255,255,255,.7); }
+    .county-name { font-size: .85rem; flex: 1; line-height: 1.3; }
+    .county-count { font-size: .75rem; color: var(--muted); flex-shrink: 0; }
+
+    /* Municipality list */
+    .muni-list {
+      display: none;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border2);
+    }
+    .muni-list.open { display: block; }
+    .muni-loading {
+      padding: .4rem 1.5rem;
+      font-size: .78rem; color: var(--muted);
+      font-style: italic;
+    }
+    .muni-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .3rem 1.5rem .3rem 1.8rem;
+      cursor: pointer; gap: .5rem;
+      font-size: .82rem; color: var(--muted);
+      transition: background .12s, color .12s;
+    }
+    .muni-row:hover { background: var(--border2); color: var(--text); }
+    .muni-row.active {
+      background: var(--active); color: #fff;
+      font-weight: 600;
+    }
+    .muni-row.active .muni-count { color: rgba(255,255,255,.7); }
+    .muni-count { font-size: .73rem; color: var(--muted); flex-shrink: 0; }
+
+    .sb-divider { height: 1px; background: var(--border2); margin: .5rem 0; }
+
+    /* Period filter rows */
+    .period-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: .33rem 1.1rem;
+      cursor: pointer; gap: .5rem;
+      transition: background .12s;
+      font-size: .85rem; color: var(--muted);
+    }
+    .period-row:hover { background: var(--bg); color: var(--text); }
+    .period-row.active { background: var(--active); color: #fff; font-weight: 600; }
+    .period-row.active .period-count { color: rgba(255,255,255,.7); }
+    .period-count { font-size: .75rem; color: var(--muted); flex-shrink: 0; }
+
+    /* Sidebar skeleton */
+    .sb-skel {
+      padding: 0 1.1rem;
+      display: flex; flex-direction: column; gap: .5rem;
+    }
+    .sb-skel-line {
+      height: .75rem; border-radius: var(--r-sm); background: var(--placeholder);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+
+    /* ── MAIN ── */
+    .main { padding: 1.25rem 1.5rem 3rem; }
+
+    /* active geo breadcrumb */
+    .geo-crumb {
+      display: none; align-items: center; gap: .4rem;
+      margin-bottom: .9rem; flex-wrap: wrap;
+    }
+    .geo-crumb.visible { display: flex; }
+    .crumb-label { font-size: .8rem; color: var(--muted); }
+    .crumb-chip {
+      display: inline-flex; align-items: center; gap: .3rem;
+      background: var(--active); color: #fff;
+      font-size: .78rem; padding: .2rem .55rem;
+      border-radius: var(--r);
+    }
+    .crumb-x {
+      cursor: pointer; opacity: .7;
+      background: none; border: none; color: inherit;
+      font-size: .85rem; line-height: 1; padding: 0;
+    }
+    .crumb-x:hover { opacity: 1; }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 1rem;
+    }
+
+    .card {
+      background: var(--surface); border: 1px solid var(--border2);
+      border-radius: var(--r-lg); overflow: hidden; cursor: pointer;
+      transition: box-shadow .18s, transform .18s;
+      display: flex; flex-direction: column;
+    }
+    .card:hover { box-shadow: 0 4px 16px rgba(23,24,27,.11); transform: translateY(-2px); }
+    .card-thumb {
+      width: 100%; aspect-ratio: 4/3; object-fit: cover;
+      background: var(--placeholder); display: block;
+    }
+    .card-body { padding: .6rem .7rem .7rem; flex: 1; display: flex; flex-direction: column; gap: .18rem; }
+    .card-place { font-family: var(--font-serif); font-size: .95rem; font-weight: 400; color: var(--text); line-height: 1.3; }
+    .card-county-label { font-size: .75rem; color: var(--muted); }
+    .card-meta { margin-top: auto; padding-top: .45rem; display: flex; justify-content: space-between; align-items: center; }
+    .tag {
+      background: var(--accent); color: var(--text);
+      font-size: .68rem; padding: .15rem .45rem;
+      border-radius: var(--r-sm); font-weight: 600; letter-spacing: .03em;
+    }
+    .card-date { font-size: .74rem; color: var(--muted); }
+
+    /* skeleton */
+    .skeleton { background: var(--surface); border: 1px solid var(--border2); border-radius: var(--r-lg); overflow: hidden; animation: pulse 1.4s ease-in-out infinite; }
+    .skeleton-img { width: 100%; aspect-ratio: 4/3; background: var(--placeholder); }
+    .skeleton-body { padding: .6rem .7rem; display: flex; flex-direction: column; gap: .4rem; }
+    .skeleton-line { height: .7rem; border-radius: var(--r-sm); background: var(--placeholder); }
+    .skeleton-line.short { width: 48%; }
+
+    /* empty/error */
+    .state-msg { padding: 4rem 0; text-align: center; color: var(--muted); }
+    .state-msg h2 { font-size: 1.05rem; margin-bottom: .4rem; color: var(--text); font-weight: 600; }
+
+    /* pagination */
+    .pagination { margin-top: 2rem; display: flex; justify-content: center; align-items: center; gap: .3rem; flex-wrap: wrap; }
+    .page-btn {
+      padding: .38rem .75rem; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      font-size: .83rem; font-family: inherit; cursor: pointer; min-width: 2.1rem; text-align: center; transition: all .15s;
+    }
+    .page-btn:hover:not(:disabled) { border-color: var(--text); }
+    .page-btn.active { background: var(--active); border-color: var(--active); color: #fff; font-weight: 600; }
+    .page-btn:disabled { opacity: .3; cursor: default; }
+    .page-ellipsis { padding: .38rem .25rem; color: var(--muted); font-size: .83rem; }
+
+    /* ── LIGHTBOX ── */
+    .lightbox { display: none; position: fixed; inset: 0; background: rgba(23,24,27,.72); z-index: 1000; align-items: center; justify-content: center; padding: 1rem; }
+    .lightbox.open { display: flex; }
+    .lightbox-inner {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-lg);
+      max-width: 940px; width: 100%; overflow: hidden; position: relative;
+      animation: fadeIn .15s ease;
+    }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:none; } }
+    .lightbox-img { width: 100%; max-height: 62vh; object-fit: contain; background: var(--placeholder); display: block; }
+    .lightbox-info { padding: 1rem 1.2rem 1.2rem; }
+    .lightbox-title { font-size: 1rem; font-weight: 600; margin-bottom: .25rem; }
+    .lightbox-sub { color: var(--muted); font-size: .84rem; margin-bottom: .9rem; }
+    .lightbox-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .lb-btn {
+      padding: .48rem .95rem; border-radius: var(--r);
+      border: 1.5px solid var(--text); background: transparent; color: var(--text);
+      font-size: .84rem; font-family: inherit; cursor: pointer; text-decoration: none; display: inline-block; transition: all .15s; font-weight: 500;
+    }
+    .lb-btn:hover { background: var(--bg); }
+    .lb-btn.primary { background: var(--text); color: #fff; font-weight: 600; }
+    .lb-btn.primary:hover { background: var(--active); border-color: var(--active); }
+    .lightbox-close {
+      position: absolute; top: .6rem; right: .6rem;
+      width: 1.9rem; height: 1.9rem; border-radius: var(--r);
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      font-size: .95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background .15s;
+    }
+    .lightbox-close:hover { background: var(--bg); }
+
+    /* ── MOBILE ── */
+    .filter-toggle {
+      display: none; align-items: center; gap: .4rem;
+      padding: .5rem 1rem; border: 1px solid var(--border); border-radius: var(--r);
+      background: var(--surface); color: var(--text); font-family: inherit;
+      font-size: .85rem; cursor: pointer; margin: .75rem 1rem 0;
+    }
+
+    @media (max-width: 800px) {
+      .content-row { grid-template-columns: 1fr; }
+      .sidebar {
+        position: fixed; top: 0; left: -100%; z-index: 300;
+        width: min(var(--sidebar-w), 85vw);
+        height: 100vh; border-right: 1px solid var(--border);
+        transition: left .22s ease; box-shadow: none;
+      }
+      .sidebar.mobile-open { left: 0; box-shadow: 4px 0 20px rgba(0,0,0,.15); }
+      .sidebar-overlay {
+        display: none; position: fixed; inset: 0; background: rgba(0,0,0,.3); z-index: 299;
+      }
+      .sidebar-overlay.visible { display: block; }
+      .filter-toggle { display: flex; }
+      .nav { padding: 0 1rem; gap: 1rem; }
+      .search-band { padding: 1rem; }
+      .toolbar { padding: .6rem 1rem; }
+      .main { padding: .75rem 1rem 2.5rem; }
+      .grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <a class="nav-logo" href="#">Nasjonalbiblioteket</a>
+  <div class="nav-divider"></div>
+  <span class="nav-title">Digitalisering av skråfoto</span>
+  <div class="nav-spacer"></div>
+  <button class="nav-lang">EN</button>
+</nav>
+
+<!-- SEARCH -->
+<div class="search-band">
+  <div class="search-inner">
+    <input id="search-input" type="text" placeholder="Søk etter sted, by, fylke eller kommune …" autocomplete="off" />
+    <button id="search-btn">Søk</button>
+  </div>
+</div>
+
+<!-- TOOLBAR -->
+<div class="toolbar">
+  <div class="toolbar-info" id="results-info"></div>
+  <div class="toolbar-controls">
+    <span class="toolbar-label">År:</span>
+    <div class="year-pills" id="year-pills">
+      <button class="year-pill active" data-year="">Alle</button>
+    </div>
+    <div class="toolbar-sep"></div>
+    <span class="toolbar-label">Sortering:</span>
+    <select id="sort-select" class="sort-select">
+      <option value="date,desc">Nyeste først</option>
+      <option value="date,asc">Eldste først</option>
+      <option value="firstDigitalContentTime,desc">Sist digitalisert</option>
+      <option value="firstDigitalContentTime,asc">Først digitalisert</option>
+    </select>
+  </div>
+</div>
+
+<!-- MOBILE FILTER TOGGLE -->
+<button class="filter-toggle" id="filter-toggle">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M1 3h12M3 7h8M5 11h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+  </svg>
+  Geografi
+</button>
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<!-- CONTENT ROW -->
+<div class="content-row">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+
+    <!-- DIGITALISERT FILTER -->
+    <div class="sb-section-title">Digitalisert</div>
+    <div id="period-list"></div>
+    <div class="sb-divider" style="margin:.4rem 0 .75rem"></div>
+
+    <!-- GEOGRAFI FILTER -->
+    <div class="sb-section-title">Geografi</div>
+    <div id="sb-clear-area"></div>
+    <div id="sb-skel" class="sb-skel">
+      <div class="sb-skel-line" style="width:70%"></div>
+      <div class="sb-skel-line" style="width:55%"></div>
+      <div class="sb-skel-line" style="width:65%"></div>
+      <div class="sb-skel-line" style="width:48%"></div>
+      <div class="sb-skel-line" style="width:72%"></div>
+      <div class="sb-skel-line" style="width:60%"></div>
+    </div>
+    <div id="county-list"></div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="geo-crumb" id="geo-crumb">
+      <span class="crumb-label">Filtrert på:</span>
+      <span class="crumb-chip" id="county-chip" style="display:none">
+        <span id="county-chip-text"></span>
+        <button class="crumb-x" onclick="clearCounty()" title="Fjern">✕</button>
+      </span>
+      <span class="crumb-chip" id="muni-chip" style="display:none">
+        <span id="muni-chip-text"></span>
+        <button class="crumb-x" onclick="clearMunicipality()" title="Fjern">✕</button>
+      </span>
+    </div>
+    <div class="grid" id="grid"></div>
+    <div class="state-msg" id="state-msg" style="display:none"></div>
+    <div class="pagination" id="pagination"></div>
+  </main>
+
+</div><!-- /content-row -->
+
+<!-- LIGHTBOX -->
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lb-close">✕</button>
+    <img class="lightbox-img" id="lb-img" src="" alt="" />
+    <div class="lightbox-info">
+      <div class="lightbox-title" id="lb-title"></div>
+      <div class="lightbox-sub" id="lb-sub"></div>
+      <div class="lightbox-actions">
+        <a class="lb-btn primary" id="lb-nb" href="#" target="_blank">Åpne i Nasjonalbiblioteket ↗</a>
+        <a class="lb-btn" id="lb-iiif" href="#" target="_blank">IIIF Manifest ↗</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const BASE = 'https://api.nb.no/catalog/v1/items';
+const FIXED_FILTERS = [
+  'filter=mediatype:bilder',
+  'filter=contentClasses:jp2',
+  'profile=nbdigital',
+];
+const PAGE_SIZE = 24;
+
+// Maps old/split county names (normalised) → current merged display name
+const COUNTY_MERGE_MAP = {
+  'sør-trøndelag':    'Trøndelag',
+  'nord-trøndelag':   'Trøndelag',
+  'trööndelage':      'Trøndelag',   // samisk namn
+  'tröndelag':        'Trøndelag',
+  'hordaland':        'Vestland',
+  'sogn og fjordane': 'Vestland',
+  'aust-agder':       'Agder',
+  'vest-agder':       'Agder',
+  'hedmark':          'Innlandet',
+  'hedemark':         'Innlandet',
+  'oppland':          'Innlandet',
+};
+
+let state = {
+  query: '', year: '', sort: 'date,desc',
+  county: '',      // display name (e.g. 'Trøndelag')
+  countyNorm: '',  // normalised group key for matching (e.g. 'trøndelag')
+  countyKeys: [],  // all constituent API keys (e.g. ['Sør-Trøndelag','Nord-Trøndelag'])
+  municipality: '', municipalityKey: '',
+  digitalPeriod: '',
+  page: 0, total: 0, totalPages: 0,
+};
+
+// ── URL BUILDER ────────────────────────────────────────────
+function buildUrl(page = 0, extraAggs = []) {
+  const q = buildQ();
+  const params = [
+    `q=${encodeURIComponent(q)}`,
+    ...FIXED_FILTERS,
+    'aggs=year:9999',
+    ...extraAggs.map(a => `aggs=${a}`),
+    ...(state.year        ? [`filter=year:${state.year}`] : []),
+    ...buildCountyFilters(),
+    ...(state.municipalityKey ? [`filter=municipality:${encodeURIComponent(state.municipalityKey)}`] : []),
+    ...(state.digitalPeriod   ? [`filter=firstDigitalContentTime:${buildDigitalFilter(state.digitalPeriod)}`] : []),
+    `sort=${state.sort}`,
+    `page=${page}`,
+    `size=${PAGE_SIZE}`,
+  ];
+  return `${BASE}?${params.join('&')}`;
+}
+
+function buildCountyFilters() {
+  if (!state.countyKeys.length) return [];
+  if (state.countyKeys.length === 1)
+    return [`filter=county:${encodeURIComponent(state.countyKeys[0])}`];
+  // Multiple old counties merged into one → OR query
+  const orVal = '(' + state.countyKeys.map(k => `"${k}"`).join(' OR ') + ')';
+  return [`filter=county:${encodeURIComponent(orVal)}`];
+}
+
+function buildQ() {
+  return state.query.trim()
+    ? `contentClasses:BilderSet625 ${state.query}`
+    : 'contentClasses:BilderSet625';
+}
+
+// ── DIGITAL PERIOD FILTER ──────────────────────────────────
+const PERIOD_OPTIONS = [
+  { id: 'yesterday', label: 'I går',       days: 1 },
+  { id: 'week',      label: 'Sist uke',    days: 7 },
+  { id: 'month',     label: 'Sist måned',  days: 30 },
+  { id: 'quarter',   label: 'Sist kvartal',days: 90 },
+];
+
+function buildDigitalFilter(periodId) {
+  const opt = PERIOD_OPTIONS.find(o => o.id === periodId);
+  if (!opt) return '';
+  const from = new Date();
+  from.setDate(from.getDate() - opt.days);
+  from.setHours(0, 0, 0, 0);
+  const fromStr = from.toISOString().replace(/\.\d+Z$/, 'Z');
+  return encodeURIComponent(`[${fromStr} TO *]`);
+}
+
+async function loadPeriodCounts() {
+  const list = document.getElementById('period-list');
+  // Render immediately with labels, load counts async
+  renderPeriodList(PERIOD_OPTIONS.map(o => ({ ...o, count: null })));
+
+  const counts = await Promise.all(PERIOD_OPTIONS.map(async opt => {
+    try {
+      const filterStr = buildDigitalFilter(opt.id);
+      const url = `${BASE}?q=${encodeURIComponent(buildQ())}&${FIXED_FILTERS.join('&')}&filter=firstDigitalContentTime:${filterStr}&size=0`;
+      const res = await fetch(url);
+      const data = await res.json();
+      return { ...opt, count: data.page?.totalElements ?? 0 };
+    } catch { return { ...opt, count: 0 }; }
+  }));
+  renderPeriodList(counts);
+}
+
+function renderPeriodList(options) {
+  const list = document.getElementById('period-list');
+  const noFilter = !state.digitalPeriod;
+  const allRow = `<div class="period-row${noFilter ? ' active' : ''}" onclick="handlePeriodClick('')">
+    <span>Alle</span>
+  </div>`;
+  const rows = options.map(opt => {
+    const isActive = state.digitalPeriod === opt.id;
+    const countStr = opt.count === null ? '…' : fmtCount(opt.count);
+    return `<div class="period-row${isActive ? ' active' : ''}"
+         onclick="handlePeriodClick('${opt.id}')">
+      <span>${opt.label}</span>
+      <span class="period-count">${countStr}</span>
+    </div>`;
+  }).join('');
+  list.innerHTML = allRow + rows;
+}
+
+function handlePeriodClick(id) {
+  state.digitalPeriod = id;
+  loadPeriodCounts();
+  loadCountySidebar();   // refresh county counts to match selected period
+  fetchPhotos(0);
+}
+
+// ── AGG URL BUILDER (respects all active state filters) ────
+function buildAggUrl(aggs, extraFilters = []) {
+  const params = [
+    `q=${encodeURIComponent(buildQ())}`,
+    ...FIXED_FILTERS,
+    ...aggs.map(a => `aggs=${a}`),
+    ...(state.year          ? [`filter=year:${state.year}`] : []),
+    ...(state.digitalPeriod ? [`filter=firstDigitalContentTime:${buildDigitalFilter(state.digitalPeriod)}`] : []),
+    ...extraFilters,
+    'size=0',
+  ];
+  return `${BASE}?${params.join('&')}`;
+}
+
+// ── FETCH RESULTS ──────────────────────────────────────────
+async function fetchPhotos(page = 0) {
+  showSkeletons();
+  clearPagination();
+  document.getElementById('results-info').textContent = '';
+
+  try {
+    const res = await fetch(buildUrl(page));
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const data = await res.json();
+    const items = data._embedded?.items || [];
+    const pg = data.page || {};
+
+    state.page = pg.number || 0;
+    state.total = pg.totalElements || 0;
+    state.totalPages = pg.totalPages || 0;
+
+    const aggs = data._embedded?.aggregations || [];
+    renderYearPills(aggs);
+    renderGrid(items);
+    renderInfo();
+    renderPagination();
+  } catch (e) {
+    showError('Kunne ikke hente bilder. Prøv igjen.');
+    console.error(e);
+  }
+}
+
+// ── COUNTY SIDEBAR ─────────────────────────────────────────
+let countyData = [];  // { display, key, count }
+let openCounty = null;
+
+async function loadCountySidebar() {
+  try {
+    const res = await fetch(buildAggUrl(['county']));
+    const data = await res.json();
+    const agg = (data._embedded?.aggregations || []).find(a => a.name === 'county');
+    countyData = mergeCounties(agg?.buckets || []);
+    renderCountySidebar();
+
+    // Re-fetch municipalities for the open county (counts have changed)
+    if (openCounty && state.countyKeys.length > 0) {
+      const muniEl = document.getElementById(`muni-${openCounty}`);
+      if (muniEl) {
+        muniEl.innerHTML = '<div class="muni-loading">Laster kommuner …</div>';
+        muniEl.classList.add('open');
+        const munis = await fetchMunicipalities(state.countyKeys);
+        renderMuniList(muniEl, null, munis);
+        muniEl.dataset.loaded = '1';
+      }
+    }
+  } catch (e) {
+    document.getElementById('sb-skel').style.display = 'none';
+    console.error(e);
+  }
+}
+
+function mergeCounties(buckets) {
+  const map = new Map();
+  buckets.forEach(b => {
+    const rawNorm = b.key.toLowerCase().trim();
+    const mergedDisplay = COUNTY_MERGE_MAP[rawNorm];
+    const groupNorm = mergedDisplay ? mergedDisplay.toLowerCase() : rawNorm;
+    const display    = mergedDisplay || toTitleCase(b.key);
+
+    if (map.has(groupNorm)) {
+      const ex = map.get(groupNorm);
+      ex.count += b.count;
+      if (!ex.keys.map(k => k.toLowerCase()).includes(b.key.toLowerCase()))
+        ex.keys.push(b.key);
+    } else {
+      map.set(groupNorm, { display, keys: [b.key], count: b.count, norm: groupNorm });
+    }
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count);
+}
+
+function toTitleCase(str) {
+  // Lowercase everything first, then capitalise the first character after
+  // a word boundary (start, space, or hyphen). This handles Ø/Æ/Å correctly
+  // since \w does not match non-ASCII letters.
+  return str.toLowerCase().replace(/(^|[\s-])(\S)/g, (_, sep, ch) => sep + ch.toUpperCase());
+}
+
+function renderCountySidebar() {
+  document.getElementById('sb-skel').style.display = 'none';
+  const list = document.getElementById('county-list');
+  list.innerHTML = '';
+
+  countyData.forEach(county => {
+    const isActive = state.countyNorm && state.countyNorm === county.norm;
+    const isOpen   = openCounty && openCounty === county.norm;
+
+    const row = document.createElement('div');
+    row.className = `county-row${isActive ? ' active' : ''}${isOpen ? ' open' : ''}`;
+    row.dataset.norm = county.norm;
+    row.innerHTML = `
+      <span class="county-arrow">▶</span>
+      <span class="county-name">${county.display}</span>
+      <span class="county-count">${fmtCount(county.count)}</span>`;
+    row.onclick = () => handleCountyClick(county);
+    list.appendChild(row);
+
+    // municipality list placeholder
+    const muniList = document.createElement('div');
+    muniList.className = `muni-list${isOpen ? ' open' : ''}`;
+    muniList.id = `muni-${county.norm}`;
+    if (isOpen) renderMuniList(muniList, county);
+    list.appendChild(muniList);
+  });
+
+  renderSbClearArea();
+}
+
+async function handleCountyClick(county) {
+  if (state.countyNorm === county.norm) {
+    clearCounty();
+    return;
+  }
+
+  state.county = county.display;
+  state.countyNorm = county.norm;
+  state.countyKeys = county.keys;
+  state.municipality = '';
+  state.municipalityKey = '';
+  openCounty = county.norm;
+
+  renderCountySidebar();
+  updateGeoCrumb();
+  fetchPhotos(0);
+
+  // Load municipalities
+  const muniListEl = document.getElementById(`muni-${county.norm}`);
+  if (muniListEl && !muniListEl.dataset.loaded) {
+    muniListEl.innerHTML = '<div class="muni-loading">Laster kommuner …</div>';
+    muniListEl.classList.add('open');
+    const munis = await fetchMunicipalities(county.keys);
+    muniListEl.dataset.loaded = '1';
+    renderMuniList(muniListEl, county, munis);
+  }
+}
+
+async function fetchMunicipalities(countyKeys) {
+  try {
+    const keys = Array.isArray(countyKeys) ? countyKeys : [countyKeys];
+    const countyFilter = keys.length === 1
+      ? `filter=county:${encodeURIComponent(keys[0])}`
+      : `filter=county:${encodeURIComponent('(' + keys.map(k => `"${k}"`).join(' OR ') + ')')}`;
+    const url = buildAggUrl(['municipality'], [countyFilter]);
+    const res = await fetch(url);
+    const data = await res.json();
+    const agg = (data._embedded?.aggregations || []).find(a => a.name === 'municipality');
+    return mergeMunicipalities(agg?.buckets || []);
+  } catch (e) {
+    return [];
+  }
+}
+
+function mergeMunicipalities(buckets) {
+  const map = new Map();
+  buckets.forEach(b => {
+    const norm = b.key.toLowerCase().trim();
+    if (map.has(norm)) {
+      const ex = map.get(norm);
+      ex.count += b.count;
+      if (b.count > ex.primaryCount) { ex.key = b.key; ex.primaryCount = b.count; }
+    } else {
+      map.set(norm, { display: toTitleCase(b.key), key: b.key, count: b.count, primaryCount: b.count });
+    }
+  });
+  return [...map.values()].sort((a, b) => b.count - a.count);
+}
+
+function renderMuniList(el, county, munis) {
+  if (!munis) return;
+  el.innerHTML = '';
+  if (!munis.length) {
+    el.innerHTML = '<div class="muni-loading">Ingen kommunedata</div>';
+    return;
+  }
+  munis.forEach(m => {
+    const isActive = state.municipalityKey && m.key.toLowerCase() === state.municipalityKey.toLowerCase();
+    const row = document.createElement('div');
+    row.className = `muni-row${isActive ? ' active' : ''}`;
+    row.innerHTML = `<span>${m.display}</span><span class="muni-count">${fmtCount(m.count)}</span>`;
+    row.onclick = () => handleMuniClick(m.key, m.display);
+    el.appendChild(row);
+  });
+}
+
+function handleMuniClick(key, display) {
+  if (state.municipalityKey && key.toLowerCase() === state.municipalityKey.toLowerCase()) {
+    clearMunicipality();
+    return;
+  }
+  state.municipality = display;
+  state.municipalityKey = key;
+  renderCountySidebar();
+  // Re-open the muni list for the active county
+  const muniEl = document.getElementById(`muni-${openCounty}`);
+  if (muniEl) {
+    muniEl.classList.add('open');
+    muniEl.dataset.loaded = '1';
+    fetchMunicipalities(state.countyKeys).then(munis => renderMuniList(muniEl, null, munis));
+  }
+  updateGeoCrumb();
+  fetchPhotos(0);
+}
+
+function clearCounty() {
+  state.county = ''; state.countyNorm = ''; state.countyKeys = [];
+  state.municipality = ''; state.municipalityKey = '';
+  openCounty = null;
+  renderCountySidebar();
+  updateGeoCrumb();
+  fetchPhotos(0);
+}
+
+function clearMunicipality() {
+  state.municipality = ''; state.municipalityKey = '';
+  // Re-render to deselect muni
+  const muniEl = document.getElementById(`muni-${openCounty}`);
+  if (muniEl) {
+    fetchMunicipalities(state.countyKeys).then(munis => renderMuniList(muniEl, null, munis));
+  }
+  updateGeoCrumb();
+  fetchPhotos(0);
+}
+
+function renderSbClearArea() {
+  const el = document.getElementById('sb-clear-area');
+  if (state.countyKeys.length > 0) {
+    el.innerHTML = `<button class="sb-clear" onclick="clearCounty()">✕ Fjern stedsfilter</button><div class="sb-clear-line"></div>`;
+  } else {
+    el.innerHTML = '';
+  }
+}
+
+// ── GEO CRUMB ──────────────────────────────────────────────
+function updateGeoCrumb() {
+  const crumb = document.getElementById('geo-crumb');
+  const cChip = document.getElementById('county-chip');
+  const mChip = document.getElementById('muni-chip');
+
+  if (state.county) {
+    crumb.classList.add('visible');
+    cChip.style.display = 'inline-flex';
+    document.getElementById('county-chip-text').textContent = state.county;
+  } else {
+    crumb.classList.remove('visible');
+    cChip.style.display = 'none';
+  }
+
+  if (state.municipality) {
+    mChip.style.display = 'inline-flex';
+    document.getElementById('muni-chip-text').textContent = state.municipality;
+  } else {
+    mChip.style.display = 'none';
+  }
+}
+
+// ── HELPERS ────────────────────────────────────────────────
+function normEq(a, b) { return a.toLowerCase().trim() === b.toLowerCase().trim(); }
+function fmtCount(n) { return n >= 1000 ? (n/1000).toFixed(1).replace('.0','') + 'k' : String(n); }
+
+function formatDate(raw) {
+  if (!raw || raw.length < 4) return raw || '';
+  const y = raw.slice(0,4), m = raw.slice(4,6), d = raw.slice(6,8);
+  if (m && d) return `${d}.${m}.${y}`;
+  if (m) return `${m}.${y}`;
+  return y;
+}
+
+// ── YEAR PILLS ─────────────────────────────────────────────
+let yearsRendered = false;
+function renderYearPills(aggs) {
+  if (yearsRendered) return;
+  const yearAgg = aggs.find(a => a.name === 'year');
+  if (!yearAgg?.buckets?.length) return;
+  const container = document.getElementById('year-pills');
+  [...yearAgg.buckets].sort((a,b) => a.key.localeCompare(b.key)).forEach(bucket => {
+    const btn = document.createElement('button');
+    btn.className = 'year-pill';
+    btn.dataset.year = bucket.key;
+    btn.textContent = bucket.key;
+    container.appendChild(btn);
+  });
+  bindYearPills();
+  yearsRendered = true;
+}
+function bindYearPills() {
+  document.querySelectorAll('.year-pill').forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll('.year-pill').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.year = btn.dataset.year;
+      yearsRendered = true;
+      fetchPhotos(0);
+    };
+  });
+}
+bindYearPills();
+
+// ── GRID ───────────────────────────────────────────────────
+function showSkeletons() {
+  document.getElementById('state-msg').style.display = 'none';
+  document.getElementById('grid').innerHTML = Array.from({length: PAGE_SIZE}, () => `
+    <div class="skeleton">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line"></div>
+        <div class="skeleton-line short"></div>
+      </div>
+    </div>`).join('');
+}
+
+function renderGrid(items) {
+  const grid = document.getElementById('grid');
+  if (!items.length) {
+    grid.innerHTML = '';
+    showMessage('Ingen treff', 'Prøv et annet søkeord eller juster filtrene.');
+    return;
+  }
+  grid.innerHTML = items.map(item => {
+    const meta = item.metadata || {};
+    const links = item._links || {};
+    const geo = meta.geographic || {};
+    const city = geo.city || '–';
+    const county = geo.county || '';
+    const date = formatDate(meta.dateCreated);
+    const thumb = links.thumbnail_custom?.href?.replace('{width},{height}', '0,280') || '';
+    const id = item.id;
+    return `
+      <div class="card" onclick="openLightbox(${JSON.stringify(id)})">
+        <img class="card-thumb" src="${thumb}" alt="${city}" loading="lazy"
+             onerror="this.style.background='var(--placeholder)'" />
+        <div class="card-body">
+          <div class="card-place">${city}</div>
+          ${county ? `<div class="card-county-label">${county}</div>` : ''}
+          <div class="card-meta">
+            <span class="tag">Skråfoto</span>
+            <span class="card-date">${date}</span>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+  window._itemCache = {};
+  items.forEach(i => window._itemCache[i.id] = i);
+}
+
+// ── INFO ───────────────────────────────────────────────────
+function renderInfo() {
+  const el = document.getElementById('results-info');
+  const from = state.page * PAGE_SIZE + 1;
+  const to = Math.min((state.page + 1) * PAGE_SIZE, state.total);
+  el.textContent = state.total ? `${from}–${to} av ${state.total.toLocaleString('no')} treff` : '';
+}
+
+// ── PAGINATION ─────────────────────────────────────────────
+function clearPagination() { document.getElementById('pagination').innerHTML = ''; }
+function renderPagination() {
+  const pg = document.getElementById('pagination');
+  if (state.totalPages <= 1) return;
+  const cur = state.page, total = state.totalPages;
+  let pages = new Set([0, total-1, cur-1, cur, cur+1, cur+2].filter(p => p>=0 && p<total));
+  pages = [...pages].sort((a,b) => a-b);
+  let html = `<button class="page-btn" ${cur===0?'disabled':''} onclick="goPage(${cur-1})">‹ Forrige</button>`;
+  let prev = -1;
+  for (const p of pages) {
+    if (prev !== -1 && p > prev+1) html += `<span class="page-ellipsis">…</span>`;
+    html += `<button class="page-btn ${p===cur?'active':''}" onclick="goPage(${p})">${p+1}</button>`;
+    prev = p;
+  }
+  html += `<button class="page-btn" ${cur>=total-1?'disabled':''} onclick="goPage(${cur+1})">Neste ›</button>`;
+  pg.innerHTML = html;
+}
+function goPage(p) { window.scrollTo({top:0,behavior:'smooth'}); fetchPhotos(p); }
+
+// ── MESSAGES ───────────────────────────────────────────────
+function showMessage(h, p) {
+  const el = document.getElementById('state-msg');
+  el.style.display = 'block';
+  el.innerHTML = `<h2>${h}</h2><p>${p}</p>`;
+}
+function showError(msg) { document.getElementById('grid').innerHTML = ''; showMessage('Feil', msg); }
+
+// ── LIGHTBOX ───────────────────────────────────────────────
+function openLightbox(id) {
+  const item = window._itemCache?.[id];
+  if (!item) return;
+  const meta = item.metadata || {};
+  const links = item._links || {};
+  const geo = meta.geographic || {};
+  document.getElementById('lb-img').src = links.thumbnail_custom?.href?.replace('{width},{height}', '0,900') || '';
+  document.getElementById('lb-title').textContent = meta.title || 'Uten tittel';
+  document.getElementById('lb-sub').textContent = [geo.city, geo.county, formatDate(meta.dateCreated)].filter(Boolean).join('  ·  ');
+  document.getElementById('lb-nb').href = `https://www.nb.no/items/${id}`;
+  document.getElementById('lb-iiif').href = links.presentation?.href || '#';
+  document.getElementById('lightbox').classList.add('open');
+}
+document.getElementById('lb-close').onclick = () => document.getElementById('lightbox').classList.remove('open');
+document.getElementById('lightbox').onclick = e => { if (e.target===document.getElementById('lightbox')) document.getElementById('lightbox').classList.remove('open'); };
+document.addEventListener('keydown', e => { if (e.key==='Escape') document.getElementById('lightbox').classList.remove('open'); });
+
+// ── SORT ───────────────────────────────────────────────────
+document.getElementById('sort-select').addEventListener('change', e => { state.sort = e.target.value; fetchPhotos(0); });
+
+// ── SEARCH ─────────────────────────────────────────────────
+document.getElementById('search-btn').onclick = () => { state.query = document.getElementById('search-input').value; fetchPhotos(0); };
+document.getElementById('search-input').addEventListener('keydown', e => { if (e.key==='Enter') { state.query = e.target.value; fetchPhotos(0); } });
+
+// ── MOBILE SIDEBAR ─────────────────────────────────────────
+document.getElementById('filter-toggle').onclick = () => {
+  document.getElementById('sidebar').classList.toggle('mobile-open');
+  document.getElementById('sidebar-overlay').classList.toggle('visible');
+};
+document.getElementById('sidebar-overlay').onclick = () => {
+  document.getElementById('sidebar').classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+};
+
+// ── INIT ───────────────────────────────────────────────────
+fetchPhotos(0);
+loadCountySidebar();
+loadPeriodCounts();
+</script>
+</body>
+</html>
