@@ -344,6 +344,33 @@
     }
     .lightbox-close:hover { background: var(--bg); }
 
+    /* ── DARK MODE ── */
+    html.dark {
+      --bg:          #17181b;
+      --surface:     #22232a;
+      --border:      #2e2f38;
+      --border2:     #2a2b33;
+      --text:        #f0f0f2;
+      --muted:       #8e8f97;
+      --placeholder: #2a2b33;
+      --accent:      #fdbeca;
+      --active:      #fe91b8;
+    }
+    html.dark .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.4); }
+    html.dark .lightbox { background: rgba(0,0,0,.78); }
+
+    .nav-dark-toggle {
+      width: 2rem; height: 2rem;
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      background: none; color: var(--muted);
+      font-size: 1rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: border-color .15s, color .15s;
+      flex-shrink: 0;
+    }
+    .nav-dark-toggle:hover { border-color: var(--text); color: var(--text); }
+
     /* ── MOBILE ── */
     .filter-toggle {
       display: none; align-items: center; gap: .4rem;
@@ -382,6 +409,7 @@
   <div class="nav-divider"></div>
   <span class="nav-title">Digitalisering av skråfoto</span>
   <div class="nav-spacer"></div>
+  <button class="nav-dark-toggle" id="dark-toggle" title="Bytt tema" aria-label="Bytt mellom lyst og mørkt tema">🌙</button>
   <button class="nav-lang">EN</button>
 </nav>
 
@@ -483,6 +511,34 @@
 </div>
 
 <script>
+// ── DARK MODE ──────────────────────────────────────────────────
+(function () {
+  const stored = localStorage.getItem('theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+  if (stored === 'dark' || (!stored && prefersDark)) {
+    document.documentElement.classList.add('dark');
+  }
+})();
+
+function updateDarkToggle() {
+  const btn = document.getElementById('dark-toggle');
+  if (!btn) return;
+  const isDark = document.documentElement.classList.contains('dark');
+  btn.textContent = isDark ? '☀️' : '🌙';
+  btn.title = isDark ? 'Bytt til lyst tema' : 'Bytt til mørkt tema';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  updateDarkToggle();
+  document.getElementById('dark-toggle').addEventListener('click', () => {
+    const html = document.documentElement;
+    const isDark = html.classList.toggle('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    updateDarkToggle();
+  });
+});
+// ──────────────────────────────────────────────────────────────
+
 const BASE = 'https://api.nb.no/catalog/v1/items';
 const FIXED_FILTERS = [
   'filter=mediatype:bilder',
